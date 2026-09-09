@@ -54,3 +54,76 @@ flowchart TD
     SILVER --> PROT
     PROT --> GOLD
 ```
+
+---
+
+## Repository Layout
+```text
+enterprise-data-engine/
+├── .azure-pipelines/
+│   ├── enterprise-data-engine-build.yml
+│   ├── enterprise-data-engine-pr.yml
+│   ├── enterprise-data-engine-push.yml
+│   ├── enterprise-data-engine-release-dev.yml
+│   ├── enterprise-data-engine-release-prod.yml
+│   └── enterprise-data-engine-release-uat.yml
+├── .vscode/
+│   ├── extensions.json
+│   ├── launch.json
+│   └── settings.json
+├── documents/
+├── resources/
+│   ├── alerts/
+│   │   └── sample.alerts.yml
+│   ├── jobs/
+│   │   ├── common_trigger_sample.jobs.yml
+│   │   ├── job_compute_sample.jobs.yml
+│   │   ├── manage_entities.jobs.yml
+│   │   └── serverless_compute_sample.jobs.yml
+│   ├── targets.yml
+│   └── variables.yml
+├── source/
+│   └── data_engine/
+│       ├── config/
+│       │   ├── blueprints/
+│       │   │   └── sample_rules.py
+│       │   └── schemas/
+│       │       ├── data_engine_dimensions.yml
+│       │       ├── data_engine_facts.yml
+│       │       └── data_engine_views.yml
+│       ├── notebooks/
+│       │   ├── orchestration/
+│       │   │   ├── currency_conversion.ipynb
+│       │   │   ├── manage_entities.ipynb
+│       │   │   ├── sample_orchestration.ipynb
+│       │   │   └── sample_snapshot.ipynb
+│       │   └── utils/
+│       │       └── setup_databricks_session.ipynb
+│       ├── requirements/
+│       │   ├── encryption.txt
+│       │   └── log.txt
+│       ├── src/
+│       │   └── core/
+│       │       ├── configs.py
+│       │       ├── currency.py
+│       │       ├── data_protection.py
+│       │       ├── data_quality.py
+│       │       ├── databricks_session.py
+│       │       ├── engine.py
+│       │       ├── helpers.py
+│       │       └── version.py
+│       ├── tests/
+│       │   ├── conftest.py
+│       │   ├── test_engine.py
+│       │   └── test_quality.py
+│       ├── pyproject.toml
+│       ├── rebuild.cmd
+│       └── run_gates.cmd
+├── .gitignore
+├── LICENSE
+└── README.md
+```
+
+---
+
+## Core Framework Modules
