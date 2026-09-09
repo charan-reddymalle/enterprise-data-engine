@@ -1,0 +1,90 @@
+variables:
+  # Infrastructure & Compute
+  job_cluster_policy_id:
+    description: Job cluster policy used for all workflows
+    lookup:
+      cluster_policy: "your-cluster-policy-name" # This should be set to the cluster policy name in the target environment.
+
+  default_job_cluster:
+    description: Default job compute cluster configuration
+    type: complex
+
+  sql_warehouse_id:
+    description: SQL Warehouse ID for executing queries and alerts
+    default: "your-sql-warehouse-id" # This should be set to the SQL Warehouse ID in the target environment.
+
+  engine_shared_libraries:
+    description: Shared Python packages (wheels) installed on job clusters
+    type: complex
+
+  support_email_dl:
+    description: Distribution list for alerts and notifications
+    type: complex
+
+  tag_project:
+    description: Project tracking tag
+    default: data_engine
+
+  tag_version:
+    description: Version tag for tracking and debugging
+    default: V_1.0
+
+  # Execution Context
+  execution_mode:
+    description: Execution context (debug or prod)
+    default: debug
+
+  env:
+    description: Environment name (dev, uat, prod)
+    default: dev
+
+  u_env:
+    description: Underscore-prefixed environment suffix
+    default: _dev
+
+  # Unity Catalog - Catalogs
+  bronze_catalog:
+    description: Bronze catalog for raw data
+    default: bronze_dev01
+
+  silver_catalog:
+    description: Silver catalog for cleaned data
+    default: silver_dev01
+
+  gold_catalog:
+    description: Gold catalog for curated analytics
+    default: gold_dev01
+
+  # Unity Catalog - Schemas
+  silver_schema:
+    description: Default Silver schema
+    default: data_engine
+
+  bronze_schema:
+    description: Default Bronze schema
+    default: data_engine
+
+  gold_schema:
+    description: Default Gold schema
+    default: data_engine
+
+  # Target Tables & Entities
+  target_entities:
+    description: Comma-separated list of target entities for schema management
+    default: "all"
+
+  target_currency_dim:
+    default: currency_dim
+
+  # Pipeline Control Flags
+  run_daily:
+    description: Enable daily pipeline runs
+    default: "false"
+
+  run_weekly:
+    description: Enable weekly pipeline runs
+    default: "true"
+
+  run_monthly:
+    description: Enable monthly pipeline runs
+    default: "true"

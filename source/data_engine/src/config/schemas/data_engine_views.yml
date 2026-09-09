@@ -1,0 +1,26 @@
+sample_fact_v: "
+  CREATE OR REPLACE VIEW {gold_catalog}.{gold_schema}.sample_fact_v
+  (
+  sample_ck        COMMENT 'Enterprise grain surrogate hash',
+  col_1            COMMENT 'Transaction line identifier',
+  col_2            COMMENT 'Entity dimension 2 surrogate reference',
+  col_3            COMMENT 'Entity dimension 3 surrogate reference',
+  col_4            COMMENT 'Transaction execution event date',
+  col_5            COMMENT 'Standardized decimal measure balance',
+  source_record_cd COMMENT 'System origin code'
+  )
+  COMMENT 'Productized analytical consumption view for sample fact records'
+  AS
+  SELECT
+  sample_ck,
+  col_1,
+  col_2,
+  col_3,
+  col_4,
+  col_5,
+  source_record_cd
+  FROM {silver_catalog}.{silver_schema}.sample_fact;
+
+  ALTER VIEW {gold_catalog}.{gold_schema}.sample_fact_v
+  SET TAGS ('consumption_tier' = 'reporting', 'target_audience' = 'avengers', 'confidentiality' = 'internal');
+  "

@@ -1,0 +1,44 @@
+resources:
+  jobs:
+    common_trigger_sample: # This is a reference key for the job configuration.
+      name: common-trigger-sample-${var.env} # This is the name of the job displayed in the Databricks UI.
+
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "5"
+            dependencies:
+              - "../../dist/*.whl"
+
+      max_concurrent_runs: 1
+      timeout_seconds: 3600
+      queue:
+        enabled: true
+
+      notification_settings:
+        no_alert_for_skipped_runs: true
+        no_alert_for_canceled_runs: true
+
+      email_notifications:
+        on_failure: "${var.support_email_dl}"
+        on_duration_warning_threshold_exceeded: "${var.support_email_dl}"
+
+      schedule:
+        quartz_cron_expression: "0 0 5 * * ?"
+        timezone_id: "America/New_York"
+
+      tags:
+        E2E: ${var.tag_project}
+        version: ${var.tag_version}
+
+      tasks:
+        - task_key: call_serverless_compute_sample_job
+          environment_key: default
+          run_job_task:
+            job_id: ${resources.jobs.serverless_compute_sample_key.id}
+
+        - task_key: run_sample_alert
+          depends_on:
+            - task_key: call_serverless_compute_sample_job
+          alert_task:
+            alert_id: ${resources.alerts.sample_alert_key.id}

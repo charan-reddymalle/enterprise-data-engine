@@ -1,0 +1,65 @@
+{
+    // Python Environment & Terminal
+    "python.defaultInterpreterPath": "${workspaceFolder}/source/data_engine/.venv/Scripts/python.exe",
+    "terminal.integrated.cwd": "${workspaceFolder}/source/data_engine",
+    "python.terminal.activateEnvironment": true,
+    "python.terminal.executeInFileDir": true,
+    // IntelliSense & Type Checking (Pylance)
+    "python.analysis.extraPaths": [
+        "./source"
+    ],
+    "python.analysis.autoImportCompletions": true,
+    "python.analysis.typeCheckingMode": "basic",
+    // Formatting & Linting (Ruff)
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.fixAll.ruff": "always",
+        "source.organizeImports.ruff": "always"
+    },
+    "[python]": {
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.rulers": [
+            88,
+            120
+        ]
+    },
+    // Testing (Pytest)
+    "python.testing.pytestEnabled": true,
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestArgs": [],
+    // Jupyter & Databricks Notebooks
+    "jupyter.interactiveWindow.cellMarker.codeRegex": "^# COMMAND ----------|^# Databricks notebook source|^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])",
+    "jupyter.interactiveWindow.cellMarker.default": "# COMMAND ----------",
+    // File & Search Exclusions
+    "files.exclude": {
+        "**/.git": true,
+        "**/.venv*": true,
+        "**/venv*": true,
+        "**/env*": true,
+        "**/__pycache__": true,
+        "**/*.pyc": true,
+        "**/build": true,
+        "**/dist": true,
+        "**/*.egg-info": true,
+        "**/spark-warehouse": true,
+        "**/metastore_db": true,
+        "**/derby.log": true,
+        "**/mlruns": true,
+        "**/multirun": true
+    },
+    "search.exclude": {
+        "**/build": true,
+        "**/dist": true,
+        "**/.cache": true,
+        "**/derby.log": true,
+        "**/spark-warehouse": true,
+        "**/mlruns": true
+    },
+    "python-envs.pythonProjects": [
+        {
+            "path": ".",
+            "envManager": "ms-python.python:venv",
+            "PackageManager": "ms-python.python:pip"
+        }
+    ]
+}

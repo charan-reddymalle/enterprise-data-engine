@@ -1,0 +1,62 @@
+# Python bytecode & caches
+**/__pycache__/
+*.py[cod]
+*.so
+
+# Virtual environments
+**/.venv*/
+**/venv*/
+**/env*/
+
+# Build artifacts & packaging
+**/build/
+**/dist/
+**/*.egg-info/
+*.egg
+MANIFEST
+
+# Testing, coverage & linting
+**/.pytest_cache/
+**/.pytest_cache/**
+**/.mypy_cache/
+**/.hypothesis/
+**/.cache/
+**/.coverage
+**/.coverage.*
+**/htmlcov/
+*.log
+
+# Jupyter & Databricks
+**/.ipynb_checkpoints/
+**/.databricks/
+**/.bundle/
+
+# IDE & editor settings
+.vscode/*
+!.vscode/settings.json
+!.vscode/launch.json
+.idea/
+**/.ropeproject/
+**/profile_default/
+ipython_config.py
+*.swp
+*.swo
+
+# Environment & secrets
+**/.env*
+
+# Local scratch, ML experiments & temporary data
+**/.scratch/
+**/mlruns/
+**/multirun/
+**/outputs/
+
+# Spark / Hive local metastore (used in testing)
+**/spark-warehouse/
+**/metastore_db/
+**/derby.log
+**/hadoop-*/
+
+# Operating system files
+**/Thumbs.db
+**/.DS_Store

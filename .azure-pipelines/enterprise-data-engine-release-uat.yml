@@ -1,0 +1,106 @@
+name: RELEASE_UAT_$(SourceBranchName)_$(Build.BuildId)_$(Date:yyyyMMdd)_$(Rev:.r)
+
+trigger: none
+
+variables:
+  ArtifactName: "data-engine"
+  ArtifactLandingZone: "core_wheels_landing_zone"
+  ProjectSubFolder: "source/data_engine"
+  ServiceConnectionName: "your-service-connection" # Name of the project service principal
+  BUNDLE_TARGET: "uat"
+  VM_IMAGE: "your-vm-image" # Name of the VM image to use for the deployment job
+  ENV: "your-env" # Name of the environment to deploy to
+  KeyVaultName: "your-key-vault" # Name of the KeyVault containing the service principal secret
+  SecretsFilter: "your-secrets-filter" # Filter for the secrets to fetch from the KeyVault
+  tenantId: "your-tenant-id" # Tenant ID for the service principal
+  clientId: "your-client-id" # Client ID for the service principal
+  clientSecret: "your-client-secret" # Client secret for the service principal
+
+resources:
+  pipelines:
+    - pipeline: build_pipeline_source
+      source: "enterprise-data-engine-build"
+      trigger: none
+
+stages:
+  # STAGE: Deploy to UAT Environment
+  - stage: DeployUAT
+    displayName: "Deploy to UAT Environment"
+    jobs:
+      - deployment: DeployToUAT
+        displayName: "Deploy to UAT Databricks"
+        pool:
+          name: $(VM_IMAGE)
+        workspace:
+          clean: all
+        environment:
+          name: $(ENV)
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                # Prevent default artifact download
+                - download: none
+
+                # Checkout source code (required for Databricks Asset Bundle files)
+                - checkout: self
+                  persistCredentials: false
+                  fetchDepth: 1
+                  displayName: "Checkout Source Code"
+
+                # Fetch Service Principal secret from KeyVault
+                - task: AzureKeyVault@2
+                  displayName: "Fetch Service Principal Secret from KeyVault"
+                  inputs:
+                    azureSubscription: $(ServiceConnectionName)
+                    KeyVaultName: $(KeyVaultName)
+                    SecretsFilter: $(SecretsFilter)
+                    RunAsPreJob: false
+
+                # Download the wheel artifact from the triggering build
+                - task: DownloadPipelineArtifact@2
+                  displayName: "Download Wheel Artifact"
+                  inputs:
+                    buildType: specific
+                    project: $(resources.pipeline.build_pipeline_source.projectID)
+                    definition: $(resources.pipeline.build_pipeline_source.pipelineID)
+                    artifact: $(ArtifactName)
+                    targetPath: "$(Pipeline.Workspace)/$(ArtifactLandingZone)"
+                    preferTriggeringPipeline: true
+
+                # Stage wheel into dist/ (required for Databricks Asset Bundles)
+                - script: |
+                    mkdir -p dist
+                    cp $(Pipeline.Workspace)/$(ArtifactLandingZone)/*.whl dist/
+                    echo "Wheel staged into dist/ folder for bundle deployment."
+                  displayName: "Stage Wheel into dist/"
+                  workingDirectory: $(Build.Repository.LocalPath)/$(ProjectSubFolder)
+
+                # Ensure Databricks CLI is installed
+                - script: |
+                    if ! command -v databricks &> /dev/null; then
+                      echo "Installing Databricks CLI..."
+                      curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
+                    fi
+                    databricks --version
+                  displayName: "Ensure Databricks CLI is Available"
+
+                # Validate bundle before deployment
+                - script: |
+                    databricks bundle validate -t $(BUNDLE_TARGET)
+                  displayName: "Validate Databricks Bundle"
+                  workingDirectory: $(Build.Repository.LocalPath)/$(ProjectSubFolder)
+                  env:
+                    ARM_TENANT_ID: $(tenantId)
+                    ARM_CLIENT_ID: $(clientId)
+                    ARM_CLIENT_SECRET: "$(clientSecret)"
+
+                # Deploy the bundle to UAT
+                - script: |
+                    databricks bundle deploy -t $(BUNDLE_TARGET)
+                  displayName: "Deploy Databricks Bundle to UAT"
+                  workingDirectory: $(Build.Repository.LocalPath)/$(ProjectSubFolder)
+                  env:
+                    ARM_TENANT_ID: $(tenantId)
+                    ARM_CLIENT_ID: $(clientId)
+                    ARM_CLIENT_SECRET: "$(clientSecret)"
