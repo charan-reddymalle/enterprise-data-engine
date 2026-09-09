@@ -1,0 +1,87 @@
+targets:
+  # Personal development target (isolated per-user sandbox)
+  dev_dev:
+    mode: development
+    default: true
+    workspace:
+      host: "your-dev-workspace-url" # Databricks workspace URL for the personal development environment
+      root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}
+    variables:
+      env: dev
+      u_env: _dev
+      execution_mode: debug
+      support_email_dl: []
+      gold_catalog: gold_dev01
+      silver_catalog: silver_dev01
+      bronze_catalog: bronze_dev01
+      sql_warehouse_id: "your-dev-sql-warehouse-id" # This should be set to the SQL Warehouse ID in the dev environment.
+    run_as:
+      user_name: ${workspace.current_user.userName}
+    permissions:
+      - user_name: ${workspace.current_user.userName}
+        level: CAN_MANAGE
+      - group_name: "your-dev-ad-group" # Name of the projects AD group for the dev environment
+        level: CAN_MANAGE
+
+  # Shared Development environment
+  dev:
+    mode: production
+    workspace:
+      host: "your-dev-workspace-url" # Databricks workspace URL for the dev environment
+      root_path: /Workspace/engine/${bundle.name}
+    variables:
+      env: dev
+      u_env: _dev
+      execution_mode: prod
+      support_email_dl:
+        - charan2036@gmail.com
+      gold_catalog: gold_dev01
+      silver_catalog: silver_dev01
+      bronze_catalog: bronze_dev01
+      sql_warehouse_id: "your-dev-sql-warehouse-id" # This should be set to the SQL Warehouse ID in the dev environment.
+    run_as:
+      service_principal_name: "your-dev-service-principal" # Name of the service principal for the dev environment
+    permissions:
+      - group_name: "your-dev-ad-group" # Name of the projects AD group for the dev environment
+        level: CAN_MANAGE
+
+  # UAT environment
+  uat:
+    mode: production
+    workspace:
+      host: "your-uat-workspace-url" # Databricks workspace URL for the uat environment
+      root_path: /Workspace/engine/${bundle.name}
+    variables:
+      env: uat
+      u_env: _uat
+      execution_mode: prod
+      support_email_dl:
+        - charan2036@gmail.com
+      gold_catalog: gold_uat01
+      silver_catalog: silver_uat01
+      bronze_catalog: bronze_uat01
+      sql_warehouse_id: "your-uat-sql-warehouse-id" # This should be set to the SQL Warehouse ID in the uat environment.
+    run_as:
+      service_principal_name: "your-uat-service-principal" # Name of the service principal for the uat environment
+    permissions:
+      - group_name: "your-uat-ad-group" # Name of the projects AD group for the uat environment
+        level: CAN_VIEW
+
+  # Production environment
+  prod:
+    mode: production
+    workspace:
+      host: "your-prod-workspace-url" # Databricks workspace URL for the prod environment
+      root_path: /Workspace/engine/${bundle.name}
+    variables:
+      env: prod
+      u_env: _prod
+      execution_mode: prod
+      support_email_dl:
+        - charan2036@gmail.com
+      gold_catalog: gold_prod01
+      silver_catalog: silver_prod01
+      bronze_catalog: bronze_prod01
+      sql_warehouse_id: "your-prod-sql-warehouse-id" # This should be set to the SQL Warehouse ID in the prod environment.
+    run_as:
+      service_principal_name: "your-prod-service-principal" # Name of the service principal for the prod environment

@@ -1,0 +1,97 @@
+name: BUILD_$(SourceBranchName)_$(Build.BuildId)_$(Date:yyyyMMdd)_$(Rev:.r)
+
+trigger:
+  branches:
+    include:
+      - development
+      - release/*
+
+pr: none
+
+variables:
+  scanTokensServiceConnection: "your-service-connection" # Service connection for accessing scan tokens
+  scannerTokensKeyVaultName: "your-key-vault" # Key vault name for storing scan tokens
+  baseACRServiceConnection: "your-acr-service-connection" # Service connection for accessing Azure Container Registry
+  ArtifactName: "data-engine"
+  ProjectSubFolder: "source/data_engine"
+
+resources:
+  repositories:
+    - repository: "securityscantemplates" # Reference to the repository containing the security scan templates
+      type: git
+      name: "your-security-scan-templates" # Name of the repository containing the security scan templates ex: project-name/repo-name
+  containers:
+    - container: "security-scanner-container" # Reference to the container image for security scanning
+      image: "aquasec/aqua-scanner:latest"
+      endpoint: $(baseACRServiceConnection)
+
+stages:
+  # STAGE 1: Security Scan
+  - stage: SecurityScan
+    displayName: "Security Vulnerability Scan"
+    jobs:
+      - job: TrivyScan
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - template: "your-template.yml@securityscantemplates" # Name of the template file in the security scan templates repository ex: trivy-scan.yml@repository
+            parameters:
+              keyVaultServiceConn: $(scanTokensServiceConnection)
+              keyVaultName: $(scannerTokensKeyVaultName)
+
+  # STAGE 2: Build & Package Artifact
+  - stage: BuildAndPackage
+    displayName: "Build & Package Artifact"
+    dependsOn: SecurityScan
+    jobs:
+      - job: BuildArtifact
+        displayName: "Compile Wheel & Publish"
+        pool:
+          vmImage: ubuntu-latest
+        workspace:
+          clean: all
+        steps:
+          # Checkout source code
+          - checkout: self
+            persistCredentials: false
+            fetchDepth: 1
+
+          # Use Python 3.11.9
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: "3.11.9"
+              addToPath: true
+            displayName: "Use Python 3.11.9"
+
+          # Restore pip cache for faster builds
+          - task: Cache@2
+            inputs:
+              key: 'pip | "$(Agent.OS)" | $(Build.Repository.LocalPath)/$(ProjectSubFolder)/pyproject.toml'
+              restoreKeys: |
+                pip | "$(Agent.OS)"
+              path: $(Pipeline.Workspace)/.pip
+            displayName: "Restore pip cache"
+
+          # Install build tools
+          - script: |
+              python -m pip install --upgrade pip setuptools wheel build
+            displayName: "Install packaging tools"
+            workingDirectory: $(Build.Repository.LocalPath)/$(ProjectSubFolder)
+            env:
+              PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip
+
+          # Generate version file and build wheel
+          - script: |
+              echo "__version__ = '$(Build.BuildId)'" > src/core/_version.py
+              echo "__commit__ = '$(Build.SourceVersion)'" >> src/core/_version.py
+              python -m build --wheel --outdir dist/
+            displayName: "Build versioned wheel package"
+            workingDirectory: $(Build.Repository.LocalPath)/$(ProjectSubFolder)
+
+          # Publish the built wheel(s)
+          - task: PublishPipelineArtifact@1
+            inputs:
+              targetPath: "$(Build.Repository.LocalPath)/$(ProjectSubFolder)/dist"
+              artifact: "$(ArtifactName)"
+              publishLocation: "pipeline"
+            displayName: "Publish build artifact"

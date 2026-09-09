@@ -1,0 +1,73 @@
+resources:
+  jobs:
+    job_compute_sample: # This is a reference key for the job configuration.
+      name: job-compute-sample-${var.env} # This is the name of the job displayed in the Databricks UI.
+
+      job_clusters:
+        - job_cluster_key: "default_job_cluster" # This is a reference key for the job cluster configuration.
+          new_cluster: "${var.default_job_cluster}"
+
+      max_concurrent_runs: 1
+      timeout_seconds: 7200
+      queue:
+        enabled: true
+
+      health:
+        rules:
+          - metric: "RUN_DURATION_SECONDS"
+            op: "GREATER_THAN"
+            value: 3600
+
+      notification_settings:
+        no_alert_for_skipped_runs: true
+        no_alert_for_canceled_runs: true
+
+      email_notifications:
+        on_failure: "${var.support_email_dl}"
+        on_duration_warning_threshold_exceeded: "${var.support_email_dl}"
+
+      schedule:
+        quartz_cron_expression: "0 0 5 * * ?"
+        timezone_id: "America/New_York"
+
+      tags:
+        E2E: ${var.tag_project}
+        version: ${var.tag_version}
+
+      parameters:
+        - name: execution_mode
+          default: ${var.execution_mode}
+        - name: bronze_catalog
+          default: ${var.bronze_catalog}
+        - name: bronze_schema
+          default: ${var.bronze_schema}
+        - name: silver_catalog
+          default: ${var.silver_catalog}
+        - name: silver_schema
+          default: ${var.silver_schema}
+        - name: gold_catalog
+          default: ${var.gold_catalog}
+        - name: gold_schema
+          default: ${var.gold_schema}
+        - name: run_daily
+          default: ${var.run_daily}
+        - name: run_weekly
+          default: ${var.run_weekly}
+        - name: run_monthly
+          default: ${var.run_monthly}
+
+      tasks:
+        - task_key: reload_data_engine_1
+          notebook_task:
+            notebook_path: ../../notebooks/orchestration/notebook1.ipynb
+          job_cluster_key: default_job_cluster
+
+        - task_key: reload_data_engine_2
+          depends_on:
+            - task_key: reload_data_engine_1
+          notebook_task:
+            notebook_path: ../../notebooks/orchestration/notebook1.ipynb
+            base_parameters:
+              param1: ${var.target_currency_dim}
+              param2: ${var.bronze_schema}
+          job_cluster_key: default_job_cluster

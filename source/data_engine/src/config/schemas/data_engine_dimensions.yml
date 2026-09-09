@@ -1,0 +1,72 @@
+sample_1_dim: "
+  CREATE OR REPLACE TABLE {silver_catalog}.{silver_schema}.sample_1_dim
+  (
+  col_ck           STRING           NOT NULL COMMENT 'Natural business primary composite key hash',
+  col_2            STRING                    COMMENT 'Descriptive attribute name or code',
+  col_3            STRING           NOT NULL COMMENT 'Dimensional category domain filter',
+  col_4            STRING                    COMMENT 'Secondary attribute specification',
+  created_at       TIMESTAMP                 COMMENT 'Record ingestion audit timestamp',
+
+  CONSTRAINT pk_sample_1_dim PRIMARY KEY (col_ck)
+  )
+  USING DELTA
+  CLUSTER BY (col_3, col_ck)
+  COMMENT 'Standardized dimension table for Entity 1 reference domain'
+  TBLPROPERTIES (
+  'delta.autoOptimize.optimizeWrite' = 'true',
+  'delta.autoOptimize.autoCompact'   = 'true'
+  );
+
+  ALTER TABLE {silver_catalog}.{silver_schema}.sample_1_dim
+  SET TAGS ('domain' = 'master_data', 'confidentiality' = 'internal');
+  ALTER TABLE {silver_catalog}.{silver_schema}.sample_1_dim
+  ALTER COLUMN col_ck SET TAGS ('key_type' = 'primary_surrogate');
+  "
+
+sample_2_dim: "
+  CREATE OR REPLACE TABLE {silver_catalog}.{silver_schema}.sample_2_dim
+  (
+  col_ck           STRING           NOT NULL COMMENT 'Natural business primary key hash for dimension 2',
+  col_2            STRING                    COMMENT 'Descriptive entity code',
+  col_3            STRING           NOT NULL COMMENT 'Domain classification key',
+  created_at       TIMESTAMP                 COMMENT 'Record ingestion audit timestamp',
+
+  CONSTRAINT pk_sample_2_dim PRIMARY KEY (col_ck)
+  )
+  USING DELTA
+  CLUSTER BY (col_3, col_ck)
+  COMMENT 'Standardized dimension table for Entity 2 reference domain'
+  TBLPROPERTIES (
+  'delta.autoOptimize.optimizeWrite' = 'true',
+  'delta.autoOptimize.autoCompact'   = 'true'
+  );
+
+  ALTER TABLE {silver_catalog}.{silver_schema}.sample_2_dim
+  SET TAGS ('domain' = 'master_data', 'confidentiality' = 'internal');
+  ALTER TABLE {silver_catalog}.{silver_schema}.sample_2_dim
+  ALTER COLUMN col_ck SET TAGS ('key_type' = 'primary_surrogate');
+  "
+
+sample_3_dim: "
+  CREATE OR REPLACE TABLE {silver_catalog}.{silver_schema}.sample_3_dim
+  (
+  col_ck           STRING           NOT NULL COMMENT 'Natural business primary key hash for dimension 3',
+  col_2            STRING                    COMMENT 'Descriptive entity label',
+  col_3            STRING           NOT NULL COMMENT 'Entity group indicator',
+  created_at       TIMESTAMP                 COMMENT 'Record ingestion audit timestamp',
+
+  CONSTRAINT pk_sample_3_dim PRIMARY KEY (col_ck)
+  )
+  USING DELTA
+  CLUSTER BY (col_3, col_ck)
+  COMMENT 'Standardized dimension table for Entity 3 reference domain'
+  TBLPROPERTIES (
+  'delta.autoOptimize.optimizeWrite' = 'true',
+  'delta.autoOptimize.autoCompact'   = 'true'
+  );
+
+  ALTER TABLE {silver_catalog}.{silver_schema}.sample_3_dim
+  SET TAGS ('domain' = 'master_data', 'confidentiality' = 'internal');
+  ALTER TABLE {silver_catalog}.{silver_schema}.sample_3_dim
+  ALTER COLUMN col_ck SET TAGS ('key_type' = 'primary_surrogate');
+  "

@@ -1,0 +1,81 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = [ "setuptools>=61", "wheel" ]
+
+[project]
+name = "data-engine"
+description = "Production-grade, metadata-driven PySpark framework featuring dynamic ingestion engines, automated testing gates, and CI/CD automation"
+readme = "README.md"
+authors = [ { email = "charan2036@gmail.com" } ]
+requires-python = ">=3.11,<3.13"
+classifiers = [
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+]
+dynamic = [ "version" ]
+
+# core dependencies
+dependencies = [  ]
+optional-dependencies.ci = [ "data-engine[hygiene,test]" ]
+
+optional-dependencies.dbx = [
+  "databricks-connect==15.4",
+  "databricks-sdk[notebook]==0.60",
+  "ipykernel==6.29.5",
+]
+
+optional-dependencies.encryption = [
+  "azure-identity>=1.25",
+  "databricks-sdk==0.30",
+  "requests>=2.31",
+  "tenacity>=8.2",
+]
+optional-dependencies.hygiene = [
+  "pyproject-fmt==2.5",
+  "pyyaml==6.0.3",
+  "ruff==0.11.2",
+  "types-pyyaml==6.0.12",
+]
+optional-dependencies.local = [
+  "data-engine[hygiene,test,log,dbx]",
+]
+optional-dependencies.log = [
+  "loguru==0.7.3",
+]
+# Developer environment for remote cluster execution
+optional-dependencies.remote-dbx = [
+  "data-engine[dbx,encryption,log,hygiene]",
+]
+optional-dependencies.test = [
+  "delta-spark==3.1",
+  "pyspark==3.5",
+  "pytest==8.3.5",
+  "pytest-cov==7.1",
+]
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+include-package-data = true
+package-data = { "*" = [ "*.json", "*.sql", "*.yml" ] }
+
+[tool.setuptools.dynamic]
+version = { attr = "core.version.__dynamic_version__" }
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+builtins = [ "dbutils", "spark" ]
+
+[tool.pytest.ini_options]
+testpaths = [ "tests" ]
+pythonpath = [ "src" ]
+addopts = """
+    -v
+    -p no:warnings
+    --junitxml=test-results.xml
+    --cov=src
+    --cov-report=term-missing
+    --cov-report=xml
+    --cov-fail-under=0
+"""

@@ -1,0 +1,116 @@
+name: PUSH_$(SourceBranchName)_$(Build.BuildId)_$(Date:yyyyMMdd)_$(Rev:.r)
+
+trigger:
+  branches:
+    include:
+      - feature/*
+      - bugfix/*
+      - hotfix/*
+
+pr: none
+
+variables:
+  scanTokensServiceConnection: "your-service-connection" # Service connection for accessing scan tokens
+  scannerTokensKeyVaultName: "your-key-vault" # Key vault name for storing scan tokens
+  baseACRServiceConnection: "your-acr-service-connection" # Service connection for accessing Azure Container Registry
+  ProjectSubFolder: "source/data_engine"
+
+resources:
+  repositories:
+    - repository: "securityscantemplates" # Reference to the repository containing the security scan templates
+      type: git
+      name: "your-security-scan-templates" # Name of the repository containing the security scan templates ex: project-name/repo-name
+  containers:
+    - container: "security-scanner-container" # Reference to the container image for security scanning
+      image: "aquasec/aqua-scanner:latest"
+      endpoint: $(baseACRServiceConnection)
+
+stages:
+  # STAGE 1: Security Scan
+  - stage: SecurityScan
+    displayName: "Security Vulnerability Scan"
+    jobs:
+      - job: TrivyScan
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - template: "your-template.yml@securityscantemplates" # Name of the template file in the security scan templates repository ex: trivy-scan.yml@repository
+            parameters:
+              keyVaultServiceConn: $(scanTokensServiceConnection)
+              keyVaultName: $(scannerTokensKeyVaultName)
+
+  # STAGE 2: Quality Gates
+  - stage: QualityGates
+    displayName: "Sandbox Quality Gates"
+    dependsOn: SecurityScan
+    jobs:
+      - job: RunValidationGates
+        displayName: "Run Quality Gates"
+        pool:
+          vmImage: ubuntu-latest
+        workspace:
+          clean: all
+        steps:
+          # Checkout source code
+          - checkout: self
+            persistCredentials: false
+            fetchDepth: 1
+
+          # Use Python 3.11.9
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: "3.11.9"
+              addToPath: true
+            displayName: "Use Python 3.11.9"
+
+          # Restore pip cache
+          - task: Cache@2
+            inputs:
+              key: 'pip | "$(Agent.OS)" | $(Build.Repository.LocalPath)/$(ProjectSubFolder)/pyproject.toml'
+              restoreKeys: |
+                pip | "$(Agent.OS)"
+              path: $(Pipeline.Workspace)/.pip
+            displayName: "Restore pip cache"
+
+          # Install dependencies
+          - script: |
+              python -m pip install --upgrade pip setuptools wheel build
+              python -m pip install --no-build-isolation -e .[local]
+            displayName: "Install dependencies from pyproject.toml"
+            workingDirectory: $(Build.Repository.LocalPath)/$(ProjectSubFolder)
+            env:
+              PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip
+
+          # Gate 1A: pyproject.toml formatting
+          - script: |
+              python -m pyproject_fmt pyproject.toml --check
+            displayName: "Gate 1A: Validate pyproject.toml"
+            workingDirectory: $(Build.Repository.LocalPath)/$(ProjectSubFolder)
+
+          # Gate 1B: Code Quality
+          - script: |
+              python -m ruff check src/core/
+            displayName: "Gate 1B: Ruff Linting"
+            workingDirectory: $(Build.Repository.LocalPath)/$(ProjectSubFolder)
+
+          # Gate 2: Unit Tests + Coverage
+          - script: |
+              # Ensure Java 17 is used (required by PySpark)
+              sudo update-java-alternatives -s java-1.17.0-openjdk-amd64 || true
+              python -m pytest
+            displayName: "Gate 2: Pytest with Coverage"
+            workingDirectory: $(Build.Repository.LocalPath)/$(ProjectSubFolder)
+
+          # Publish Test Results
+          - task: PublishTestResults@2
+            inputs:
+              testResultsFormat: "JUnit"
+              testResultsFiles: "**/test-results.xml"
+              searchFolder: "$(Build.Repository.LocalPath)/$(ProjectSubFolder)"
+            displayName: "Publish Test Results"
+
+          # Publish Coverage Results
+          - task: PublishCodeCoverageResults@2
+            inputs:
+              summaryFileLocation: "$(Build.Repository.LocalPath)/$(ProjectSubFolder)/coverage.xml"
+            displayName: "Publish Coverage Results"

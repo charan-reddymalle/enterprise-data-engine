@@ -1,0 +1,54 @@
+resources:
+  jobs:
+    manage_entities_sample: # This is a reference key for the job configuration.
+      name: manage-entities-sample-${var.env} # This is the name of the job displayed in the Databricks UI.
+
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "5"
+            dependencies:
+              - "../../dist/*.whl"
+
+      max_concurrent_runs: 1
+      timeout_seconds: 3600
+      queue:
+        enabled: true
+
+      health:
+        rules:
+          - metric: "RUN_DURATION_SECONDS"
+            op: "GREATER_THAN"
+            value: 1800
+
+      notification_settings:
+        no_alert_for_skipped_runs: true
+        no_alert_for_canceled_runs: true
+
+      email_notifications:
+        on_failure: "${var.support_email_dl}"
+        on_duration_warning_threshold_exceeded: "${var.support_email_dl}"
+
+      tags:
+        E2E: ${var.tag_project}
+        version: ${var.tag_version}
+
+      parameters:
+        - name: execution_mode
+          default: ${var.execution_mode}
+        - name: target_entities
+          default: "sample_dim1, sample_dim2, sample_fact, sample_view"
+        - name: silver_catalog
+          default: ${var.silver_catalog}
+        - name: silver_schema
+          default: ${var.silver_schema}
+        - name: gold_catalog
+          default: ${var.gold_catalog}
+        - name: gold_schema
+          default: ${var.gold_schema}
+
+      tasks:
+        - task_key: manage_entities
+          notebook_task:
+            notebook_path: ../../notebooks/orchestration/manage_entities.ipynb
+          environment_key: default

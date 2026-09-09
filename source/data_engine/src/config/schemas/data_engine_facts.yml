@@ -1,0 +1,36 @@
+sample_fact: "
+  CREATE OR REPLACE TABLE {silver_catalog}.{silver_schema}.sample_fact
+  (
+  sample_ck        STRING           NOT NULL COMMENT 'Granular grain natural surrogate key',
+  col_1            STRING                    COMMENT 'Transaction business identifier',
+  col_2            STRING           NOT NULL COMMENT 'FK referencing sample_2_dim natural key',
+  col_3            STRING           NOT NULL COMMENT 'FK referencing sample_3_dim natural key',
+  col_4            DATE             NOT NULL COMMENT 'Event calendar transaction date',
+  col_5            DECIMAL(38, 10)  NOT NULL COMMENT 'Quantified metric monetary or weight amount',
+  source_record_cd STRING           NOT NULL COMMENT 'Source extraction system lineage code',
+  created_at       TIMESTAMP                 COMMENT 'Delta load processing timestamp',
+
+  CONSTRAINT pk_sample_fact PRIMARY KEY (sample_ck),
+  CONSTRAINT fk_sample_fact_sample_2_dim FOREIGN KEY (col_2)
+  REFERENCES {silver_catalog}.{silver_schema}.sample_2_dim (col_ck),
+  CONSTRAINT fk_sample_fact_sample_3_dim FOREIGN KEY (col_3)
+  REFERENCES {silver_catalog}.{silver_schema}.sample_3_dim (col_ck)
+  )
+  USING DELTA
+  CLUSTER BY (col_4, col_2)
+  COMMENT 'Enterprise consolidated transaction fact events table'
+  TBLPROPERTIES (
+  'delta.autoOptimize.optimizeWrite' = 'true',
+  'delta.autoOptimize.autoCompact'   = 'true',
+  'delta.deletedFileRetentionDuration' = 'interval 7 days'
+  );
+
+  ALTER TABLE {silver_catalog}.{silver_schema}.sample_fact
+  SET TAGS ('domain' = 'master_data', 'confidentiality' = 'internal');
+  ALTER TABLE {silver_catalog}.{silver_schema}.sample_fact
+  ALTER COLUMN sample_ck SET TAGS ('key_type' = 'primary_key');
+  ALTER TABLE {silver_catalog}.{silver_schema}.sample_fact
+  ALTER COLUMN col_2 SET TAGS ('key_type' = 'foreign_key');
+  ALTER TABLE {silver_catalog}.{silver_schema}.sample_fact
+  ALTER COLUMN col_3 SET TAGS ('key_type' = 'foreign_key');
+  "
